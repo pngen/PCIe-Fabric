@@ -1,0 +1,36 @@
+# Build artifacts
+build/
+build-*/
+out/
+*.exe
+*.obj
+*.o
+*.lib
+*.dll
+*.pdb
+*.ilk
+*.exp
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+install/
+install_manifest.txt
+
+# VS / IDE
+.vs/
+.vscode/
+*.user
+*.suo
+.idea/
+
+# Test / profiling
+Testing/
+*.log
+*.profraw
+*.profdata
+
+# Local
+*.tmp
