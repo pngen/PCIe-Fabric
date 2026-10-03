@@ -8,6 +8,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdio>
+#include <filesystem>
 #include <string>
 #include <thread>
 
@@ -29,6 +30,17 @@ static bool poll(F&& pred, int rounds = 250) {
   return pred();
 }
 static void sleep_ms(int ms) { std::this_thread::sleep_for(std::chrono::milliseconds(ms)); }
+
+// Store artefacts live under the platform temporary directory so the proof is
+// portable across machines and accounts.
+static std::string temp_store_path(const char* leaf) {
+  std::error_code ec;
+  std::filesystem::path dir = std::filesystem::temp_directory_path(ec);
+  if (ec) { dir = std::filesystem::current_path(ec); }
+  dir /= "pcie_fabric_tests";
+  std::filesystem::create_directories(dir, ec);
+  return (dir / leaf).string();
+}
 
 static void send_stale_snapshot(std::uint16_t port) {
   TcpSocket s;
@@ -119,7 +131,7 @@ int main() {
   CHECK(poll([&]{ return coord.path_count() >= 2; }));
 
   // Persist, stop the coordinator, recover in a fresh coordinator.
-  const std::string fpath = "C:\\Users\\pauln\\AppData\\Local\\Temp\\pf_smoke\\coord.bin";
+  const std::string fpath = temp_store_path("coord.bin");
   coord.set_persist_path(fpath);
   CHECK(coord.persist_now().ok());
   coord.request_stop();

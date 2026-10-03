@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Unit + property + adversarial + concurrency + synthetic scenario tests.
 #include <atomic>
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <cstdio>
@@ -270,6 +271,19 @@ static void test_protocol() {
 
 // ---------------------------------------------------------------------------
 // Persistence: round-trip, corruption, truncation, duplicate, recovery.
+//
+// Store artefacts are written under the platform temporary directory so the
+// suite is portable across machines and accounts and leaves no repository state
+// behind.
+static std::string temp_store_path(const char* leaf) {
+  std::error_code ec;
+  std::filesystem::path dir = std::filesystem::temp_directory_path(ec);
+  if (ec) { dir = std::filesystem::current_path(ec); }
+  dir /= "pcie_fabric_tests";
+  std::filesystem::create_directories(dir, ec);
+  return (dir / leaf).string();
+}
+
 static void test_persistence(const std::string& path) {
   Snapshot s; s.sequence = 42; s.epoch = CoordinatorEpoch(3);
   Node n; n.bdf = Bdf(0,1,0,0); n.kind = DeviceClass::BRIDGE; n.generation = PciNodeGeneration(1);
@@ -400,7 +414,7 @@ int main() {
   test_reservation();
   test_concurrency();
   test_protocol();
-  test_persistence("C:\\Users\\pauln\\AppData\\Local\\Temp\\pf_smoke\\unit.bin");
+  test_persistence(temp_store_path("unit.bin"));
   test_synthetic_scenarios();
   test_adversarial();
   std::printf("DONE checks=%d failures=%d\n", g_check, g_fail);
